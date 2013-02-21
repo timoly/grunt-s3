@@ -41,6 +41,10 @@ S3Task.prototype = {
           transfers.push(s3.del.bind(s3,del.src, del));
         });
 
+        config.delFolder.forEach(function(del) {
+          transfers.push(s3.delFolder.bind(s3,del.src, del));
+        });
+
         config.copy.forEach(function(copy) {
           transfers.push(s3.copy.bind(s3,copy.src, copy.dest, copy));
         });
