@@ -31,7 +31,7 @@ const MSG_UPLOAD_SUCCESS = '↗'.blue + ' Uploaded: %s (%s)';
 const MSG_DOWNLOAD_SUCCESS = '↙'.yellow + ' Downloaded: %s (%s)';
 const MSG_DELETE_SUCCESS = '✗'.red + ' Deleted: %s';
 const MSG_COPY_SUCCESS = '→'.cyan + ' Copied: %s to %s';
-const MSG_LIST_COUNT = '→'.green + ' Found %s files in %s';
+const MSG_DELETE_DIR_SUCCESS = '→'.red + ' Deleted %s files from %s';
 
 const MSG_UPLOAD_DEBUG = '↗'.blue + ' Upload: ' + '%s'.grey + ' to ' + '%s:%s'.cyan;
 const MSG_DOWNLOAD_DEBUG = '↙'.yellow + ' Download: ' + '%s:%s'.cyan + ' to ' + '%s'.grey;
@@ -359,65 +359,53 @@ exports.init = function (grunt) {
   };
 
   /**
-   * Delete a file from s3.
+   * Delete a folder from s3.
    *
-   * @param {String} src The s3 path, relative to the bucket, to the file to
+   * @param {String} src The s3 path, relative to the bucket, to the folder to
    *     delete.
-   * @param {Object} [options] An object containing options which override any
+   * @param {Object} [opts] An object containing options which override any
+   *     option declared in the global s3 config.
+   * @param {Object} [cfg] An object containing config which override any
    *     option declared in the global s3 config.
    */
-  exports.delFolder = function (src, opts) {
+  exports.delFolder = function (src, opts, cfg) {
     var dfd = new _.Deferred();
     var options = _.clone(opts);
-    var config = _.defaults(options, getConfig());
+    var config = _.defaults(options, cfg);
 
     // Pick out the configuration options we need for the client.
     var client = knox.createClient(_(config).pick([
-      'endpoint', 'port', 'key', 'secret', 'access', 'bucket'
+      'endpoint', 'port', 'key', 'secret', 'access', 'bucket', 'secure'
     ]));
 
     if (config.debug) {
       return dfd.resolve(util.format(MSG_DELETE_DEBUG, client.bucket, src)).promise();
     }
 
-    var files = {};
+    var deleteMultiple = function(fileKeys){
+      client.deleteMultiple(fileKeys, function (err, res) {
+        dfd.resolve(util.format(MSG_DELETE_DIR_SUCCESS, _.size(fileKeys), src? src : "/"));
+      });
+    }
 
+    var files = {};
     client.list({prefix: src}, function (err, data) {
       if (err) {
         dfd.reject(makeError(MSG_ERR_DELETE, src, err));
       }
       else {
         if(data.Contents && data.Contents.length > 0){
-          data.Contents.forEach(function(file) {
-            files[file.Key] = {
-              key: file.Key,
-              opts: opts
-            };
-          });
+          var keys = _.pluck(data.Contents, "Key");
+          deleteMultiple(keys);
         }
         else if(data.Contents){
-          files[data.Contents.Key] = {
-            key: data.Contents.Key,
-            opts: opts
-          };
+          deleteMultiple([data.Contents.Key]);
+        }
+        else{
+          dfd.resolve(util.format(MSG_DELETE_DIR_SUCCESS, 0, src? src : "/"));
         }
       }
-  
-      dfd.resolve(util.format(MSG_LIST_COUNT, _.size(files), src), files);
     });
-
-    console.log("jepajee", files);
-
-
-    // // Upload the file to this endpoint.
-    // client.deleteFile(src, function (err, res) {
-    //   if (err || res.statusCode !== 204) {
-    //     dfd.reject(makeError(MSG_ERR_DELETE, src, err || res.statusCode));
-    //   }
-    //   else {
-    //     dfd.resolve(util.format(MSG_DELETE_SUCCESS, src));
-    //   }
-    // });
 
     return dfd.promise();
   };

@@ -25,55 +25,63 @@ S3Task.prototype = {
           grunt.log.writeln();
         }
 
-        config.upload.forEach(function(upload) {
+        var errors = 0;
+        var processJobs = function(doneFn){
+          var total = transfers.length;
+          var errors = 0;
+
+          var eachTransfer = config.maxOperations > 0 ? 
+            async.forEachLimit.bind(async,transfers,config.maxOperations)
+            : async.forEach.bind(async,transfers);
+          
+          eachTransfer(function(transferFn, completed){
+            var transfer = transferFn();
+            
+            transfer.done(function(msg) {
+              grunt.log.ok(msg);
+              completed();
+            });
+            
+            transfer.fail(function(msg) {
+              grunt.log.error(msg);
+              ++errors;
+              completed();
+            });
+            
+          },function(){
+            // we're all done.
+            doneFn(!errors);
+          });
+        };
+
+        var queueRemainingJobs = function(){
+          transfers = [];
+          config.upload.forEach(function(upload) {
             var uploadFiles = self._parseUploadFiles(upload, config);
 
             uploadFiles.forEach(function(uploadFile) {
                 transfers.push(s3.upload.bind(s3, uploadFile.file, uploadFile.dest, uploadFile.upload));
             });
-        });
+          });
+          config.download.forEach(function(download) {
+            transfers.push(s3.download.bind(s3,download.src, download.dest, download));
+          });
 
-        config.download.forEach(function(download) {
-          transfers.push(s3.download.bind(s3,download.src, download.dest, download));
-        });
+          config.del.forEach(function(del) {
+            transfers.push(s3.del.bind(s3,del.src, del));
+          });
 
-        config.del.forEach(function(del) {
-          transfers.push(s3.del.bind(s3,del.src, del));
-        });
+          config.copy.forEach(function(copy) {
+            transfers.push(s3.copy.bind(s3,copy.src, copy.dest, copy));
+          });
+          processJobs(done);
+        };
 
+        // execute delFolder jobs first
         config.delFolder.forEach(function(del) {
-          transfers.push(s3.delFolder.bind(s3,del.src, del));
+          transfers.push(s3.delFolder.bind(s3,del.src, del, config));
         });
-
-        config.copy.forEach(function(copy) {
-          transfers.push(s3.copy.bind(s3,copy.src, copy.dest, copy));
-        });
-
-        var total = transfers.length;
-        var errors = 0;
-
-        var eachTransfer = config.maxOperations > 0 ? 
-          async.forEachLimit.bind(async,transfers,config.maxOperations)
-          : async.forEach.bind(async,transfers);
-        
-        eachTransfer(function(transferFn, completed){
-          var transfer = transferFn();
-          
-          transfer.done(function(msg) {
-            grunt.log.ok(msg);
-            completed();
-          });
-          
-          transfer.fail(function(msg) {
-            grunt.log.error(msg);
-            ++errors;
-            completed();
-          });
-          
-        },function(){
-          // we're all done.
-          done(!errors);
-        });
+        processJobs(queueRemainingJobs);        
     },
 
     _parseUploadFiles: function(upload, config) {
@@ -127,6 +135,7 @@ S3Task.prototype = {
           upload: [],
           download: [],
           del: [],
+          delFolder: [],
           copy: []
         });
 
