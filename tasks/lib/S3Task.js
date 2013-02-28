@@ -111,6 +111,8 @@ S3Task.prototype = {
                 dest = path.join(destPath, path.basename(file));
               }
             }
+            // slashes need to be / on s3, not the ones that work for the current os
+            dest = dest.replace(/\\/g, "/");
 
             if(config.encodePaths === true) {
               dest = encodeURIComponent(dest);

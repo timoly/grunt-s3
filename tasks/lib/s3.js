@@ -80,7 +80,7 @@ exports.init = function (grunt) {
    */
   exports.put = exports.upload = function (src, dest, opts) {
     var dfd = new _.Deferred();
-    var options = _.clone(opts);
+    var options = _.clone(opts, true);
 
     // Make sure the local file exists.
     if (!existsSync(src)) {
@@ -96,7 +96,7 @@ exports.init = function (grunt) {
 
     // Pick out the configuration options we need for the client.
     var client = knox.createClient(_(config).pick([
-      'endpoint', 'port', 'key', 'secret', 'access', 'bucket', 'secure'
+      'region', 'endpoint', 'port', 'key', 'secret', 'access', 'bucket', 'secure'
     ]));
 
     if (config.debug) {
@@ -105,7 +105,7 @@ exports.init = function (grunt) {
 
     // Encapsulate this logic to make it easier to gzip the file first if
     // necesssary.
-    function upload(cb) {
+    var upload = function (cb) {
       cb = cb || function () {};
 
       // Upload the file to s3.
@@ -140,7 +140,7 @@ exports.init = function (grunt) {
           });
         }
       });
-    }
+    };
 
     // If gzip is enabled, gzip the file into a temp file and then perform the
     // upload.
@@ -218,7 +218,7 @@ exports.init = function (grunt) {
 
     // Pick out the configuration options we need for the client.
     var client = knox.createClient(_(config).pick([
-      'endpoint', 'port', 'key', 'secret', 'access', 'bucket'
+      'region', 'endpoint', 'port', 'key', 'secret', 'access', 'bucket'
     ]));
 
     if (config.debug) {
@@ -291,7 +291,7 @@ exports.init = function (grunt) {
 
     // Pick out the configuration options we need for the client.
     var client = knox.createClient(_(config).pick([
-      'endpoint', 'port', 'key', 'secret', 'access', 'bucket'
+      'region', 'endpoint', 'port', 'key', 'secret', 'access', 'bucket'
     ]));
 
     if (config.debug) {
@@ -338,7 +338,7 @@ exports.init = function (grunt) {
 
     // Pick out the configuration options we need for the client.
     var client = knox.createClient(_(config).pick([
-      'endpoint', 'port', 'key', 'secret', 'access', 'bucket'
+      'region', 'endpoint', 'port', 'key', 'secret', 'access', 'bucket'
     ]));
 
     if (config.debug) {
@@ -390,20 +390,12 @@ exports.init = function (grunt) {
 
     var files = {};
     client.list({prefix: src}, function (err, data) {
-      if (err) {
-        dfd.reject(makeError(MSG_ERR_DELETE, src, err));
+      if(err === null && data && data.Contents){
+        var keys = _.pluck(data.Contents, "Key");
+        deleteMultiple(keys);
       }
       else {
-        if(data.Contents && data.Contents.length > 0){
-          var keys = _.pluck(data.Contents, "Key");
-          deleteMultiple(keys);
-        }
-        else if(data.Contents){
-          deleteMultiple([data.Contents.Key]);
-        }
-        else{
-          dfd.resolve(util.format(MSG_DELETE_DIR_SUCCESS, 0, src? src : "/"));
-        }
+        dfd.reject(makeError(MSG_ERR_DELETE, src, err));
       }
     });
 

@@ -1,7 +1,7 @@
 {
   "name": "grunt-s3",
   "description": "A grunt task to automate moving files to/from Amazon S3.",
-  "version": "0.1.1",
+  "version": "0.2.0-alpha",
   "author": "Aaron Forsander (https://github.com/pifantastic)",
   "homepage": "https://github.com/pifantastic/grunt-s3",
   "repository": {
@@ -33,7 +33,7 @@
   "dependencies": {
     "grunt": "0.4.x",
     "underscore.deferred": "~0.1.4",
-    "knox": "0.4.1",
+    "knox": "0.5.4",
     "mime": "~1.2.5"
   },
   "devDependencies": {
