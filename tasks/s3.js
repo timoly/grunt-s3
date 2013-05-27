@@ -11,10 +11,20 @@
  *
  */
 
-module.exports = function (grunt) {
+var s3 = require('./lib/s3');
 
-  const s3 = require('./lib/s3').init(grunt);
-  const S3Task = require("./lib/S3Task");
+var exportFn = function (grunt) {
+  var S3Task = require('./lib/S3Task');
+
+  // If grunt is not provided, then expose internal API.
+  if (typeof grunt !== 'object') {
+    return {
+      s3: s3,
+      S3Task: S3Task
+    };
+  }
+
+  s3 = s3.init(grunt);
 
   /**
    * Transfer files to/from s3.
@@ -27,3 +37,9 @@ module.exports = function (grunt) {
     task.run();
   });
 };
+
+exportFn.init = function (grunt) {
+  return s3.init(grunt);
+};
+
+module.exports = exportFn;

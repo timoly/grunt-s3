@@ -1,5 +1,7 @@
 [![Build Status](https://secure.travis-ci.org/pifantastic/grunt-s3.png?branch=master)](https://travis-ci.org/pifantastic/grunt-s3)
 
+*NOTE*: This is the README for `grunt-s3` `v0.2.0-alpha`. For `v0.1.0`, [go here](https://github.com/pifantastic/grunt-s3/blob/0.1.X/README.md).
+
 # Grunt 0.4.x + Amazon S3
 
 ## About
@@ -30,7 +32,7 @@ grunt.loadNpmTasks('grunt-s3');
 
 ## Options
 
-The grunt-s3 task is now a [multi-task](https://github.com/gruntjs/grunt/wiki/Creating-tasks); meaning you can specify different targets for this task to run as.  
+The grunt-s3 task is now a [multi-task](https://github.com/gruntjs/grunt/wiki/Creating-tasks); meaning you can specify different targets for this task to run as.
 
 The following are the default options available to each target.
 
@@ -45,6 +47,7 @@ transfers i.e. `{ 'X-Awesomeness': 'Out-Of-This-World', 'X-Stuff': 'And Things!'
 * **access** - (*string*) A specific Amazon S3 ACL. Available values: `private`, `public-read`, `
 public-read-write`, `authenticated-read`, `bucket-owner-read`, `bucket-owner-full-control`
 * **gzip** - (*boolean*) If true, uploads will be gzip-encoded.
+* **gzipExclude** - (*array*) Define extensions of files you don't want to run gzip on, an array of strings ie: `['.jpg', '.jpeg', '.png']`.
 * **upload** - (*array*) An array of objects, each object representing a file upload and containing a `src`
 and a `dest`. Any of the above values may also be overriden.
 * **download** - (*array*) An array of objects, each object representing a file download and containing a
@@ -117,7 +120,7 @@ grunt.initConfig({
         }
       ]
     }
-    
+
   }
 
 });
@@ -148,7 +151,7 @@ demonstrates loading aws settings from another file.
 
 ```javascript
 grunt.initConfig({
-  aws: '<json:grunt-aws.json>',
+  aws: grunt.file.readJSON('grunt-aws.json'),
   s3: {
     key: '<%= aws.key %>',
     secret: '<%= aws.secret %>',
@@ -170,7 +173,13 @@ environment variables:
 
 ## Helpers
 
-### grunt.helper('s3.put', src, dest, options)
+Helpers have been removed from Grunt 0.4 to access these methods directly. You can now require the s3 library files directly like so:
+
+`var s3 = require('grunt-s3').helpers;`
+
+Make sure you explicitly pass the options into the method. If you've used `grunt.initConfig()` you can use `grunt.config.get('s3')` to access them.
+
+### s3.upload(src, dest, options)
 
 Upload a file to s3. Returns a Promises/J-style Deferred object.
 
@@ -190,7 +199,7 @@ any values specified in the main config.
 `authenticated-read`, `bucket-owner-read`, `bucket-owner-full-control`
 * **gzip** - (*boolean*) If true, uploads will be gzip-encoded.
 
-### grunt.helper('s3.pull', src, dest, options)
+### s3.download(src, dest, options)
 Download a file from s3. Returns a Promises/J-style Deferred object.
 
 **src** (required) - The path on S3 from which the file will be downloaded, relative to the bucket. **Does not accept wildcards**
@@ -205,7 +214,7 @@ any values specified in the main config.
 * **bucket** - An Amazon S3 bucket
 * **headers** - An object containing any headers you would like to send along with the upload.
 
-### grunt.helper('s3.delete', src, options)
+### s3.delete(src, options)
 
 Delete a file from s3. Returns a Promises/J-style Deferred object.
 
@@ -222,7 +231,7 @@ any values specified in the main config.
 ### Examples
 
 ```javascript
-var upload = grunt.helper('s3.put', 'dist/my-app-1.0.0.tar.gz', 'archive/my-app-1.0.0.tar.gz');
+var upload = s3.upload('dist/my-app-1.0.0.tar.gz', 'archive/my-app-1.0.0.tar.gz');
 
 upload
   .done(function(msg) {
@@ -235,10 +244,10 @@ upload
     console.log('dance!');
   });
 
-var download = grunt.helper('s3.pull', 'dist/my-app-0.9.9.tar.gz', 'local/my-app-0.9.9.tar.gz');
+var download = s3.download('dist/my-app-0.9.9.tar.gz', 'local/my-app-0.9.9.tar.gz');
 
 download.done(function() {
-  grunt.helper('s3.delete', 'dist/my-app-0.9.9.tar.gz');
+  s3.delete('dist/my-app-0.9.9.tar.gz');
 });
 
 ```

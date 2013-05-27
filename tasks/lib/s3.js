@@ -17,6 +17,7 @@ const zlib = require('zlib');
 const knox = require('knox');
 const mime = require('mime');
 const deferred = require('underscore.deferred');
+var Tempfile = require('temporary/lib/file');
 
 // Local
 const common = require('./common');
@@ -46,8 +47,8 @@ const MSG_ERR_COPY = 'Copy error: %s to %s';
 const MSG_ERR_CHECKSUM = '%s error: expected hash: %s but found %s for %s';
 
 exports.init = function (grunt) {
-  var async = grunt.util.async,
-      _ = grunt.util._;
+  var async = grunt.util.async;
+  var _ = grunt.util._;
 
   _.mixin(deferred);
 
@@ -142,26 +143,26 @@ exports.init = function (grunt) {
       });
     };
 
-    // If gzip is enabled, gzip the file into a temp file and then perform the
-    // upload.
-    if (options.gzip) {
+    // prepare gzip exclude option
+    var gzipExclude = options.gzipExclude || [];
+    if (!_.isArray(gzipExclude)) {
+      gzipExclude = [];
+    }
+
+    // If gzip is enabled and file not in gzip exclude array,
+    // gzip the file into a temp file and then perform the upload.
+    if (options.gzip && gzipExclude.indexOf(path.extname(src)) === -1) {
       headers['Content-Encoding'] = 'gzip';
-      headers['Content-Type'] = mime.lookup(src);
+      headers['Content-Type'] = headers['Content-Type'] || mime.lookup(src);
 
       var charset = mime.charsets.lookup(headers['Content-Type'], null);
       if (charset) {
         headers['Content-Type'] += '; charset=' + charset;
       }
 
-      // Determine a unique temp file name.
-      var tmp = src + '.gz';
-      var incr = 0;
-      while (existsSync(tmp)) {
-        tmp = src + '.' + (incr++) + '.gz';
-      }
-
+      var tmp = new Tempfile();
       var input = fs.createReadStream(src);
-      var output = fs.createWriteStream(tmp);
+      var output = fs.createWriteStream(tmp.path);
 
       // Gzip the file and upload when done.
       input.pipe(zlib.createGzip()).pipe(output)
@@ -170,10 +171,10 @@ exports.init = function (grunt) {
         })
         .on('close', function () {
           // Update the src to point to the newly created .gz file.
-          src = tmp;
+          src = tmp.path;
           upload(function (err, msg) {
             // Clean up the temp file.
-            fs.unlinkSync(tmp);
+            tmp.unlinkSync();
 
             if (err) {
               dfd.reject(err);
@@ -300,7 +301,7 @@ exports.init = function (grunt) {
 
     var headers = {
       'Content-Length': 0,
-      'x-amz-copy-source' : src
+      'x-amz-copy-source': src
     };
 
     if (options.headers) {
@@ -375,7 +376,7 @@ exports.init = function (grunt) {
 
     // Pick out the configuration options we need for the client.
     var client = knox.createClient(_(config).pick([
-      'endpoint', 'port', 'key', 'secret', 'access', 'bucket', 'secure'
+      'region', 'endpoint', 'port', 'key', 'secret', 'access', 'bucket', 'secure'
     ]));
 
     if (config.debug) {
