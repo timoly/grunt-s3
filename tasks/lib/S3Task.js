@@ -77,9 +77,12 @@ S3Task.prototype = {
     };
 
     // execute delFolder jobs first
-    config.delFolder.forEach(function(del) {
-      transfers.push(s3.delFolder.bind(s3,del.src, del, config));
-    });
+    if(config.delFolder){
+      config.delFolder.forEach(function(del) {
+        transfers.push(s3.delFolder.bind(s3,del.src, del, config));
+      });
+    }
+    
     processJobs(queueRemainingJobs);
   },
 
