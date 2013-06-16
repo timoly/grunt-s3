@@ -22,6 +22,30 @@ S3Task.prototype = {
       grunt.log.writeln();
     }
 
+<<<<<<< HEAD
+=======
+    config.upload.forEach(function (upload) {
+      var uploadFiles = self._parseUploadFiles(upload, config);
+
+      uploadFiles.forEach(function (uploadFile) {
+        transfers.push(s3.upload.bind(s3, uploadFile.file, uploadFile.dest, uploadFile.upload));
+      });
+    });
+
+    config.download.forEach(function (download) {
+      transfers.push(s3.download.bind(s3, download.src, download.dest, _(download).defaults(config)));
+    });
+
+    config.del.forEach(function (del) {
+      transfers.push(s3.del.bind(s3, del.src, _(del).defaults(config)));
+    });
+
+    config.copy.forEach(function (copy) {
+      transfers.push(s3.copy.bind(s3, copy.src, copy.dest, _(copy).defaults(config)));
+    });
+
+    var total = transfers.length;
+>>>>>>> be85108b249734be7ff1e8b5a57c502d2c109e4b
     var errors = 0;
     var processJobs = function(doneFn){
       var total = transfers.length;
@@ -90,8 +114,8 @@ S3Task.prototype = {
       file = path.resolve(file);
       upload.src = path.resolve(grunt.template.process(upload.src));
 
-      // Put the key, secret and bucket information into the upload for knox
-      _.extend(upload, config);
+      // Put the key, secret and bucket information into the upload for knox.
+      var fileConfig = _.extend({}, config, upload.options || {});
 
       // If there is only 1 file and it matches the original file wildcard,
       // we know this is a single file transfer. Otherwise, we need to build
@@ -118,7 +142,7 @@ S3Task.prototype = {
       return {
         file: file,
         dest: dest,
-        upload: upload
+        upload: fileConfig
       };
     });
   },
