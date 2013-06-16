@@ -22,31 +22,9 @@ S3Task.prototype = {
       grunt.log.writeln();
     }
 
-<<<<<<< HEAD
-=======
-    config.upload.forEach(function (upload) {
-      var uploadFiles = self._parseUploadFiles(upload, config);
-
-      uploadFiles.forEach(function (uploadFile) {
-        transfers.push(s3.upload.bind(s3, uploadFile.file, uploadFile.dest, uploadFile.upload));
-      });
-    });
-
-    config.download.forEach(function (download) {
-      transfers.push(s3.download.bind(s3, download.src, download.dest, _(download).defaults(config)));
-    });
-
-    config.del.forEach(function (del) {
-      transfers.push(s3.del.bind(s3, del.src, _(del).defaults(config)));
-    });
-
-    config.copy.forEach(function (copy) {
-      transfers.push(s3.copy.bind(s3, copy.src, copy.dest, _(copy).defaults(config)));
-    });
-
     var total = transfers.length;
->>>>>>> be85108b249734be7ff1e8b5a57c502d2c109e4b
     var errors = 0;
+
     var processJobs = function(doneFn){
       var total = transfers.length;
       var errors = 0;

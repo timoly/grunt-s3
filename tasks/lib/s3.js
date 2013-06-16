@@ -28,29 +28,11 @@ var existsSync = ('existsSync' in fs) ? fs.existsSync : path.existsSync;
 /**
  * Success/error messages.
  */
-<<<<<<< HEAD
-const MSG_UPLOAD_SUCCESS = '↗'.blue + ' Uploaded: %s (%s)';
-const MSG_DOWNLOAD_SUCCESS = '↙'.yellow + ' Downloaded: %s (%s)';
-const MSG_DELETE_SUCCESS = '✗'.red + ' Deleted: %s';
-const MSG_COPY_SUCCESS = '→'.cyan + ' Copied: %s to %s';
-const MSG_DELETE_DIR_SUCCESS = '→'.red + ' Deleted %s files from %s';
-
-const MSG_UPLOAD_DEBUG = '↗'.blue + ' Upload: ' + '%s'.grey + ' to ' + '%s:%s'.cyan;
-const MSG_DOWNLOAD_DEBUG = '↙'.yellow + ' Download: ' + '%s:%s'.cyan + ' to ' + '%s'.grey;
-const MSG_DELETE_DEBUG = '✗'.red + ' Delete: ' + '%s:%s'.cyan;
-const MSG_COPY_DEBUG = '→'.cyan + ' Copy: ' + '%s'.cyan + ' to ' + '%s:%s'.cyan;
-
-const MSG_ERR_NOT_FOUND = '¯\\_(ツ)_/¯ File not found: %s';
-const MSG_ERR_UPLOAD = 'Upload error: %s (%s)';
-const MSG_ERR_DOWNLOAD = 'Download error: %s (%s)';
-const MSG_ERR_DELETE = 'Delete error: %s (%s)';
-const MSG_ERR_COPY = 'Copy error: %s to %s';
-const MSG_ERR_CHECKSUM = '%s error: expected hash: %s but found %s for %s';
-=======
 var MSG_UPLOAD_SUCCESS = '↗'.blue + ' Uploaded: %s (%s)';
 var MSG_DOWNLOAD_SUCCESS = '↙'.yellow + ' Downloaded: %s (%s)';
 var MSG_DELETE_SUCCESS = '✗'.red + ' Deleted: %s';
 var MSG_COPY_SUCCESS = '→'.cyan + ' Copied: %s to %s';
+var MSG_DELETE_DIR_SUCCESS = '→'.red + ' Deleted %s files from %s';
 
 var MSG_UPLOAD_DEBUG = '↗'.blue + ' Upload: ' + '%s'.grey + ' to ' + '%s:%s'.cyan;
 var MSG_DOWNLOAD_DEBUG = '↙'.yellow + ' Download: ' + '%s:%s'.cyan + ' to ' + '%s'.grey;
@@ -63,7 +45,6 @@ var MSG_ERR_DOWNLOAD = 'Download error: %s (%s)';
 var MSG_ERR_DELETE = 'Delete error: %s (%s)';
 var MSG_ERR_COPY = 'Copy error: %s to %s';
 var MSG_ERR_CHECKSUM = '%s error: expected hash: %s but found %s for %s';
->>>>>>> be85108b249734be7ff1e8b5a57c502d2c109e4b
 
 exports.init = function (grunt) {
   var async = grunt.util.async;
