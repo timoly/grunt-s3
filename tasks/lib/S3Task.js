@@ -114,11 +114,13 @@ S3Task.prototype = {
         }
       }
 
+      dest = dest.replace(/\\/g, '/');
+
       if (config.encodePaths === true) {
         dest = encodeURIComponent(dest);
       }
 
-      dest = dest.replace(/\\/g, '/');
+      
 
       return {
         file: file,
